@@ -69,6 +69,8 @@ public class HttpDotGraphMessageHandler implements HttpRequestHandler  {
 		
 		String target = request.getRequestLine().getUri();
 
+		response.addHeader("Access-Control-Allow-Origin", "*");
+		response.addHeader("Access-Control-Allow-Methods", "GET, POST");
 		response.setStatusCode(HttpStatus.SC_OK);
 		
 		if (request instanceof HttpEntityEnclosingRequest) {
@@ -79,7 +81,7 @@ public class HttpDotGraphMessageHandler implements HttpRequestHandler  {
 			log.debug("message contents\n" + dot);
 
 			// only respond if we have a valid dot
-			if(StringUtils.isNotBlank(dot) && GraphViz.isValidDotText(dot)) {
+			if (StringUtils.isNotBlank(dot) && GraphViz.isValidDotText(dot)) {
 
 				target = (StringUtils.isNotBlank(target) ? 
 						StringUtils.remove((URLDecoder.decode(target, "UTF-8")).trim().toLowerCase(), '/') : null);
@@ -89,12 +91,12 @@ public class HttpDotGraphMessageHandler implements HttpRequestHandler  {
 				HttpEntity graph = this.generateGraph(dot, target);
 
 				response.setEntity(graph);
+				log.info(response.toString());
+				log.info("Responded with Success");
+			} else {
+				log.error("dot file is empty or is not valid dot syntax");
 			}
-
 		}
-
-		log.info("Responded with Success");
-		
 	}
 	
 	/**
@@ -135,12 +137,11 @@ public class HttpDotGraphMessageHandler implements HttpRequestHandler  {
 		//	      String type = "plain";
 		File out = new File(TEMP_PATH + graphType);   // Linux
 
-		gv.writeGraphToFile( gv.getGraph( gv.getDotSource(), graphType ), out );
+		gv.writeGraphToFile(gv.getGraph(gv.getDotSource(), graphType), out);
 		
 		FileEntity body = new FileEntity(out, contentType);
 		
 		return body;
-       
 	}
 
 }

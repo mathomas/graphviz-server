@@ -24,16 +24,11 @@ package info.dawelbeit.graphviz.dot;
  ******************************************************************************
  */
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.InputStreamReader;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+
+import java.io.*;
+import java.util.Arrays;
 
 /**
  * <dl>
@@ -86,7 +81,8 @@ public class GraphViz
 	private static String DOT = "/usr/bin/dot";	// Linux
 	//   private static String DOT = "c:/Program Files/Graphviz2.26.3/bin/dot.exe";	// Windows
 	
-	public static final String GRAPH_START = "digraph G {";
+	public static final String DIGRAPH_START = "digraph";
+	public static final String GRAPH_START = "graph";
 	
 	public static final String GRAPH_END = "}";
 
@@ -176,21 +172,24 @@ public class GraphViz
 	public int writeGraphToFile(byte[] img, File to)
 	{
 		try {
+			log.info("Output image byte array length: " + img.length);
 			FileOutputStream fos = new FileOutputStream(to);
 			fos.write(img);
 			fos.close();
-		} catch (java.io.IOException ioe) { return -1; }
+		} catch (java.io.IOException ioe) {
+			log.error("Ran into an issue with the output graph file", ioe);
+			return -1; }
 		return 1;
 	}
 
 	/**
 	 * It will call the external dot program, and return the image in
 	 * binary format.
-	 * @param dot Source of the graph (in dot language).
+	 * @param dotFile Source of the graph (in dot language).
 	 * @param type Type of the output image to be produced, e.g.: gif, dot, fig, pdf, ps, svg, png.
 	 * @return The image of the graph in .gif format.
 	 */
-	private byte[] get_img_stream(File dot, String type)
+	private byte[] get_img_stream(File dotFile, String type)
 	{
 		File img;
 		byte[] img_stream = null;
@@ -199,8 +198,9 @@ public class GraphViz
 			img = File.createTempFile("graph_", "."+type, new File(GraphViz.TEMP_DIR));
 			Runtime rt = Runtime.getRuntime();
 
-			// patch by Mike Chenault
-			String[] args = {DOT, "-T"+type, dot.getAbsolutePath(), "-o", img.getAbsolutePath()};
+			String dotPath = System.getProperty("dot.path", DOT);
+			String[] args = {dotPath, "-T"+type, dotFile.getAbsolutePath(), "-o", img.getAbsolutePath()};
+			log.debug("Running dot via rt.exec() with following args: " + Arrays.asList(args));
 			Process p = rt.exec(args);
 
 			p.waitFor();
@@ -253,7 +253,7 @@ public class GraphViz
 	 * @return A string to open a graph.
 	 */
 	public String start_graph() {
-		return GRAPH_START;
+		return DIGRAPH_START;
 	}
 
 	/**
@@ -306,7 +306,8 @@ public class GraphViz
 	 * @return
 	 */
 	public static boolean isValidDotText(String dot) {
-		return StringUtils.isNotBlank(dot) && (dot.indexOf(GRAPH_START) > -1);
+		return StringUtils.isNotBlank(dot)
+				&& (dot.contains(DIGRAPH_START) || dot.contains(GRAPH_START));
 	}
 
 } // end of class GraphViz
