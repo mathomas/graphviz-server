@@ -1,0 +1,2 @@
+cd /opt/graphviz-server
+java -jar DotGraphics-0.0.1.jar 8080 > /dev/null 2>&1 &

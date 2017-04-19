@@ -1,0 +1,20 @@
+version: 0.0
+os: linux
+files:
+  - source: target/DotGraphics-0.0.1.jar
+    destination: /opt/graphviz-server/
+hooks:
+  BeforeInstall:
+    - location: scripts/install-dependencies
+      timeout: 300
+      runas: root
+  ApplicationStart:
+    - location: scripts/start-server
+      timeout: 
+      runas: root
+  ApplicationStop:
+    - location: scripts/stop-server
+      timeout: 300
+      runas: root
+
+
